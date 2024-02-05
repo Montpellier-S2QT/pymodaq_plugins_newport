@@ -9,6 +9,8 @@ class CS130():
 
     _dll_path = 'D:\\DLL_to_be_shared\\DLL'
     _shutter_auto = True
+    _gratings = {'1200 / 350':1,'2400 / 275':2}
+
     def open_communication(self):
         load()
         sys.path.append(self._dll_path)
@@ -51,8 +53,8 @@ class CS130():
 
         @param (int) value: grating index
         """
-
-        self._device.setGrating(value+1)
+        g = self._gratings[value]
+        self._device.setGrating(g)
 
 
     def get_wavelength(self):

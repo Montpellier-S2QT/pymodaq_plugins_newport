@@ -35,14 +35,9 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
                   'children': [
                       {'title': 'Mono SN:', 'name': 'mono_serialnumber', 'type': 'str', 'value': '',
                        'readonly': True},
-                      {'title': 'Wavelength (nm):', 'name': 'monoo_wl', 'type': 'float', 'value': 300, 'min': 0,
-                       'readonly': True},
-                      {'title': 'Home Wavelength (nm):', 'name': 'spectro_wl_home', 'type': 'float', 'value': 300,
-                       'min': 0,
-                       'readonly': False},
                       {'title': 'Grating Settings:', 'name': 'grating_settings', 'type': 'group', 'expanded': True,
                        'children': [
-                           {'title': 'Grating:', 'name': 'grating', 'type': 'list'},
+                           {'title': 'Grating:', 'name': 'grating', 'type': 'list','limits':['2400 / 275','1200 / 350']},
                            {'title': 'Lines (/mm):', 'name': 'lines', 'type': 'int', 'readonly': True},
                            {'title': 'Blaze WL (nm):', 'name': 'blaze', 'type': 'str', 'readonly': True},
                        ]},
@@ -77,9 +72,8 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
         param: Parameter
             A given parameter (within detector_settings) whose value has been changed by the user
         """
-        # TODO for your custom plugin
-        if param.name() == "a_parameter_you've_added_in_self.params":
-            self.controller.your_method_to_apply_this_param_change()
+        if param.name() == "grating":
+            self.controller.set_grating(param.value()) # work in progress
         else:
             pass
 
