@@ -27,7 +27,7 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
     _controller_units = 'nm'
     is_multiaxes = False
     _axis_names = []
-    _epsilon = 0.01
+    _epsilon = 0.05
     data_actuator_type = DataActuatorType['DataActuator']
 
     params = [
@@ -112,7 +112,8 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
         value = self.set_position_with_scaling(value)  # apply scaling if the user specified one
 
         self.controller.set_wavelength(value.value())
-        self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
+        message='New wavelength (nm) : '+str(value.value())
+        self.emit_status(ThreadCommand('Update_Status', [message]))
 
     def move_rel(self, value: DataActuator):
         """ Move the actuator to the relative target actuator value defined by value
@@ -141,8 +142,7 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
     def stop_motion(self):
         """Stop the actuator and emits move_done signal"""
         # TODO for your custom plugin
-        raise NotImplemented  # when writing your own plugin remove this line
-        self.controller.your_method_to_stop_positioning()  # when writing your own plugin replace this line
+        self.controller.stop_motion()
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
 
 

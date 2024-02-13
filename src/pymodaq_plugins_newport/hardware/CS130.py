@@ -62,9 +62,11 @@ class CS130():
 
         @return (float): current central wavelength (nmeter)
         """
+        time.sleep(0.1)
+
         self._device.getWavelength()
         w=float(self._device.getResponse())
-
+        print('réponse : ',w)
         return w   #*1.0e-9
 
     def set_wavelength(self, value):
@@ -73,7 +75,14 @@ class CS130():
         @params (float) value: The new central wavelength (nmeter)
         """
 
-        self._device.setWavelength(float(value))   #* 1.0e9)
+        chaine = 'GOWAVE ' + str(value)
+        print('cible : ', value)
+
+        self._device.sendCommand(chaine)
+        #self._device.setWavelength(float(value))   #* 1.0e9)
         time.sleep(0.1)
+
+    def stop_motion(self):
+        self._device.device.sendCommand('ABORT')
 
 
