@@ -1,4 +1,4 @@
-from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters, main
+from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.utils.logger import set_logger, get_module_name
 from easydict import EasyDict as edict
@@ -7,27 +7,25 @@ from pymodaq_plugins_newport.hardware.agilis_serial import AgilisSerial, COMPORT
 logger = set_logger(get_module_name(__file__))
 
 
+
 class DAQ_Move_Newport_AgilisSerial(DAQ_Move_base):
     """
     """
-    _controller_units = 'step'
+
     is_multiaxes = True
     channel_names = AgilisSerial.channel_indexes
-    axis_names = AgilisSerial.axis_indexes
-    epsilon = 1
+    _axis_names = AgilisSerial.axis_indexes
+    _controller_units = ['' for _ in range(len(_axis_names))]
+    _epsilons = [1, 1]
     port = 'COM9' if 'COM9' in COMPORTS else COMPORTS[0] if len(COMPORTS) > 0 else ''
 
     params = [
                  {'title': 'COM Port:', 'name': 'com_port', 'type': 'list', 'limits': COMPORTS, 'value': port},
                  {'title': 'Firmware:', 'name': 'firmware', 'type': 'str', 'value': ''},
                  {'title': 'Channel:', 'name': 'channel', 'type': 'list', 'limits': channel_names},
-                 {'title': 'Axis:', 'name': 'axis', 'type': 'list', 'limits': axis_names},
+                 {'title': 'Axis:', 'name': 'axis', 'type': 'list', 'limits': _axis_names},
                  {'title': 'Sleep time (s):', 'name': 'sleep_time', 'type': 'float', 'value': 0.25},
-                 {'title': 'MultiAxes:', 'name': 'multiaxes', 'type': 'group', 'visible': is_multiaxes, 'children': [
-                     {'title': 'is Multiaxes:', 'name': 'ismultiaxes','type': 'bool', 'value': is_multiaxes},
-                     {'title': 'Status:', 'name': 'multi_status', 'type': 'list', 'limits': ['Master', 'Slave']},
-                  ]}
-             ] + comon_parameters
+             ] + comon_parameters_fun(axis_names=_axis_names, epsilon=_epsilons)
 
     def __init__(self, parent=None, params_state=None):
         """
@@ -35,7 +33,7 @@ class DAQ_Move_Newport_AgilisSerial(DAQ_Move_base):
         """
 
         super().__init__(parent, params_state)
-        self.controller = None
+        self.controller: AgilisSerial = None
 
         self.current_position = 0
         self.target_position = 0
@@ -56,35 +54,17 @@ class DAQ_Move_Newport_AgilisSerial(DAQ_Move_base):
             * controller (object) initialized controller
             * initialized: (bool): False if initialization failed otherwise True
         """
-        try:
-            self.status.update(edict(info="", controller=None, initialized=False))
-            if self.settings.child('multiaxes', 'ismultiaxes').value()\
-                    and self.settings.child('multiaxes',
-                                            'multi_status').value() == "Slave":
-                if controller is None:
-                    raise Exception('no controller has been defined externally while'
-                                    'this axe is a slave one')
-                else:
-                    self.controller = controller
-            else:  # Master stage
-                self.controller = AgilisSerial()
-                info = self.controller.init_com_remote(self.settings.child('com_port').value())
-                if self.controller.get_channel() != self.settings.child('channel').value():
-                    self.controller.select_channel(self.settings.child('channel').value())
-                self.settings.child('firmware').setValue(info)
-                self.status.info = info
-
-            self.status.controller = self.controller
-            self.status.initialized = True
-
-            return self.status
-
-        except Exception as e:
-            self.emit_status(
-                ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
-            self.status.info = getLineInfo() + str(e)
-            self.status.initialized = False
-            return self.status
+        initialized = True
+        if self.is_master:  # Master stage
+            self.controller = AgilisSerial()
+            info = self.controller.init_com_remote(self.settings.child('com_port').value())
+            if self.controller.get_channel() != self.settings.child('channel').value():
+                self.controller.select_channel(self.settings.child('channel').value())
+            self.settings.child('firmware').setValue(info)
+        else:
+            self.controller = controller
+            info = 'Initialized'
+        return info, initialized
 
     def get_actuator_value(self):
         """
@@ -154,7 +134,8 @@ class DAQ_Move_Newport_AgilisSerial(DAQ_Move_base):
         """
         Terminate the communication protocol.
         """
-        self.controller.close()
+        if self.is_master:
+            self.controller.close()
 
 
 if __name__ == '__main__':
