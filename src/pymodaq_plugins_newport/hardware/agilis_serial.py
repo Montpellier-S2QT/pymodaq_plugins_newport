@@ -11,7 +11,7 @@ visa_rm = pyvisa.ResourceManager()
 _infos = visa_rm.list_resources_info()
 COMPORTS = []
 for k in _infos.keys():
-    COMPORTS.append(_infos[k].alias)
+    COMPORTS.append(_infos[k].resource_name)
 
 lock = Lock()
 
@@ -33,6 +33,7 @@ class AgilisSerial:
         self._controller = None
         self._info = None
         self._timeout_wait_isready_ms = 10000
+        self.visa_rm = pyvisa.ResourceManager()
 
     def init_com_remote(self, com_port):
         self.open(com_port)
@@ -44,7 +45,7 @@ class AgilisSerial:
 
     def open(self, com_port):
         if com_port in COMPORTS:
-            self._controller = visa_rm.open_resource(com_port, baud_rate=921600)
+            self._controller = self.visa_rm.open_resource(com_port, baud_rate=921600)
             time.sleep(1)
 
             self._controller.read_termination = self._controller.CR + self._controller.LF
