@@ -5,7 +5,6 @@ from pymodaq.utils.parameter import Parameter
 
 from pymodaq_plugins_newport.hardware.CS130 import CS130
 
-
 class DAQ_Move_Newport_CS130(DAQ_Move_base):
     """ Instrument plugin class for an actuator.
     

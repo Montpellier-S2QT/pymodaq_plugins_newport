@@ -7,7 +7,7 @@ from pythonnet import load
 
 class CS130():
 
-    _dll_path = 'D:\\DLL_to_be_shared\\DLL'
+    _dll_path = 'D:\\My_DLLs\\Cornerstone'
     _shutter_auto = True
     _gratings = {'1200 / 350':1,'2400 / 275':2}
 
