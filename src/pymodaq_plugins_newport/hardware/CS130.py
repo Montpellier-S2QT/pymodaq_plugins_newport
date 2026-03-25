@@ -41,20 +41,28 @@ class CS130():
         return self._device.disconnect()
 
     def get_device_name(self):
+        time.sleep(0.1)
+
         return self._device.getDeviceName()
 
     def get_available_gratings(self):
+        time.sleep(0.1)
+
         available_gratings = []
         for i in range(1,4):
             lines = self._device.getGratingLines(i)
-            if lines =! -1.0:
+            if lines != -1.0:
                 available_gratings.append(i)
         return available_gratings
 
     def get_grating_lines(self, index):
+        time.sleep(0.1)
+
         return self._device.getGratingLines(index)
 
     def get_grating_label(self, index):
+        time.sleep(0.1)
+
         return self._device.getGratingLabel(index)
 
     def get_grating(self):
@@ -62,13 +70,17 @@ class CS130():
 
         @return (int): Current grating index
         """
-        return int(self._device.getGrating()[0])
+        time.sleep(0.1)
+
+        return int(self._device.getGrating())
 
     def set_grating(self, index):
         """ Sets the grating by index
 
         @param (int) value: grating index
         """
+        time.sleep(0.1)
+
         self._device.setGrating(index)
 
 
@@ -95,6 +107,6 @@ class CS130():
 
 
     def stop_motion(self):
-        self._device.device.sendCommand('ABORT')
+        self._device.sendCommand('ABORT')
 
 

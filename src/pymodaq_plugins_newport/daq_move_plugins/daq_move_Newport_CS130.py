@@ -32,7 +32,7 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
     params = [
                  {'title': 'Mono Settings:', 'name': 'mono_settings', 'type': 'group', 'expanded': True,
                   'children': [
-                      {'title': 'Mono SN:', 'name': 'mono_serialnumber', 'type': 'str', 'value': '',
+                      {'title': 'Mono:', 'name': 'mono_name', 'type': 'str', 'value': '',
                        'readonly': True},
                       {'title': 'Grating Settings:', 'name': 'grating_settings', 'type': 'group', 'expanded': True,
                        'children': [
@@ -83,10 +83,10 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
             A given parameter (within detector_settings) whose value has been changed by the user
         """
         if param.name() == "grating":
-            gr_index = get_available_gratings()[1][param.value()]
+            gr_index = self.get_available_gratings()[1][param.value()]
             self.controller.set_grating(gr_index)
-            self.settings.child('mono_settings', 'gr_lines').setValue(self.controller.get_grating_lines(gr_index))
-            self.settings.child('mono_settings', 'gr_label').setValue(self.controller.get_grating_label(gr_index))
+            self.settings.child('mono_settings', 'grating_settings', 'gr_lines').setValue(self.controller.get_grating_lines(gr_index))
+            self.settings.child('mono_settings', 'grating_settings', 'gr_label').setValue(self.controller.get_grating_label(gr_index))
         else:
             pass
 
@@ -110,12 +110,14 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
 
         info = "Initializing CS130"
         initialized = self.controller.open_communication()
-        self.settings.child('mono_settings', 'mono_serialnumber').setValue(self.controller.get_device_name())
-        self.settings.child('mono_settings', 'grating').setLimits(self.get_available_gratings()[0])
+        self.settings.child('mono_settings', 'mono_name').setValue(self.controller.get_device_name())
+        gratings_str, gratings_dict = self.get_available_gratings()
+        inv_dict = {v: k for k, v in gratings_dict.items()}
+        self.settings.child('mono_settings', 'grating_settings', 'grating').setLimits(gratings_str)
         gr_index = self.controller.get_grating()
-        self.settings.child('mono_settings', 'grating').setValue(list(get_available_gratings()[1].keys())[gr_index-1])
-        self.settings.child('mono_settings', 'gr_lines').setValue(self.controller.get_grating_lines(gr_index))
-        self.settings.child('mono_settings', 'gr_label').setValue(self.controller.get_grating_label(gr_index))
+        self.settings.child('mono_settings', 'grating_settings', 'grating').setValue(list(inv_dict[gr_index]))
+        self.settings.child('mono_settings', 'grating_settings', 'gr_lines').setValue(self.controller.get_grating_lines(gr_index))
+        self.settings.child('mono_settings', 'grating_settings', 'gr_label').setValue(self.controller.get_grating_label(gr_index))
         return info, initialized
 
     def move_abs(self, value: DataActuator):
@@ -144,16 +146,15 @@ class DAQ_Move_Newport_CS130(DAQ_Move_base):
         value = self.check_bound(self.current_position + value) - self.current_position
         self.target_value = value + self.current_position
 
-        self.controller.set_wavelength(self.target_value)
-        message = 'New wavelength (nm): ' + str(value.value())
+        self.controller.set_wavelength(self.target_value.value())
+        message = 'New wavelength (nm): ' + str(self.target_value.value())
         self.emit_status(ThreadCommand('Update_Status', [message]))
 
     def move_home(self):
         """Call the reference method of the controller"""
 
-        # TODO for your custom plugin
-        raise NotImplemented  # when writing your own plugin remove this line
-        self.controller.your_method_to_get_to_a_known_reference()  # when writing your own plugin replace this line
+        raise NotImplementedError
+        self.controller.your_method_to_get_to_a_known_reference()
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
 
     def stop_motion(self):
