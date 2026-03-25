@@ -9,7 +9,6 @@ class CS130():
 
     _dll_path = 'D:\\My_DLLs\\Cornerstone'
     _shutter_auto = True
-    _gratings = {'1200 / 350':1,'2400 / 275':2}
 
     def open_communication(self):
         load()
@@ -20,8 +19,8 @@ class CS130():
         self._device = CornerstoneDll.Cornerstone(True)
 
         try:
-            a=self._device.connect()
-            b=self._device.findDevices()
+            self._device.connect()
+            self._device.findDevices()
         except:
             raise IOError('No device found')
 
@@ -41,20 +40,36 @@ class CS130():
             self._device.setShutter(False)
         return self._device.disconnect()
 
+    def get_device_name(self):
+        return self._device.getDeviceName()
+
+    def get_available_gratings(self):
+        available_gratings = []
+        for i in range(1,4):
+            lines = self._device.getGratingLines(i)
+            if lines =! -1.0:
+                available_gratings.append(i)
+        return available_gratings
+
+    def get_grating_lines(self, index):
+        return self._device.getGratingLines(index)
+
+    def get_grating_label(self, index):
+        return self._device.getGratingLabel(index)
+
     def get_grating(self):
         """ Returns the current grating index
 
         @return (int): Current grating index
         """
-        return int(self._device.getGrating()[0])-1
+        return int(self._device.getGrating()[0])
 
-    def set_grating(self, value):
+    def set_grating(self, index):
         """ Sets the grating by index
 
         @param (int) value: grating index
         """
-        g = self._gratings[value]
-        self._device.setGrating(g)
+        self._device.setGrating(index)
 
 
     def get_wavelength(self):
@@ -66,7 +81,6 @@ class CS130():
 
         self._device.getWavelength()
         w=float(self._device.getResponse())
-        print('réponse : ',w)
         return w   #*1.0e-9
 
     def set_wavelength(self, value):
@@ -75,12 +89,10 @@ class CS130():
         @params (float) value: The new central wavelength (nmeter)
         """
 
-        chaine = 'GOWAVE ' + str(value)
-        print('cible : ', value)
-
-        self._device.sendCommand(chaine)
-        #self._device.setWavelength(float(value))   #* 1.0e9)
+        command_str = 'GOWAVE ' + str(value)
+        self._device.sendCommand(command_str)
         time.sleep(0.1)
+
 
     def stop_motion(self):
         self._device.device.sendCommand('ABORT')
